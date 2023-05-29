@@ -8,7 +8,7 @@ class MapExercise:
         def map_function(movie: dict) -> float:
             return (
                 float(movie["rating_kinopoisk"])
-                if movie["rating_kinopoisk"] and len(movie["country"].split(",")) > 1
+                if movie["rating_kinopoisk"] and "," in movie["country"]
                 else 0
             )
 

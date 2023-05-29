@@ -9,8 +9,8 @@ class FilterMapExercise:
 
         map_results = map(func, input_array)
         result = []
-        for element in map_results:
-            if element[0]:
-                result.append(element[1])
+        for flag, value in map_results:
+            if flag:
+                result.append(value)
 
         return result
