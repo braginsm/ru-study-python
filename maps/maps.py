@@ -1,31 +1,36 @@
 from typing import Union
+from functools import reduce
 
 
 class MapExercise:
     @staticmethod
     def rating(list_of_movies: list[dict]) -> float:
-        """
-        !!Задание нужно решить используя map!!
-        Посчитать средний рейтинг фильмов (rating_kinopoisk) у которых две или больше стран.
-        Фильмы у которых рейтинг не задан или равен 0 не учитывать в расчете среднего.
+        def map_function(movie: dict) -> float:
+            return (
+                float(movie["rating_kinopoisk"])
+                if movie["rating_kinopoisk"] and "," in movie["country"]
+                else 0
+            )
 
-        :param list_of_movies: Список фильмов.
-        Ключи словаря: name, rating_kinopoisk, rating_imdb, genres, year, access_level, country
-        :return: Средний рейтинг фильмов у которых две или больше стран
-        """
-        pass
+        ratings = map(map_function, list_of_movies)
+        rating_sum = 0.0
+        movie_count = 0
+        for rating in ratings:
+            if rating:
+                movie_count += 1
+                rating_sum += rating
+
+        return rating_sum / movie_count if movie_count > 0 else movie_count
 
     @staticmethod
     def chars_count(list_of_movies: list[dict], rating: Union[float, int]) -> int:
-        """
-        !!Задание нужно решить используя map!!
-        Посчитать количество букв 'и' в названиях всех фильмов с рейтингом (rating_kinopoisk) больше
-        или равным заданному значению
+        def map_function(movie: dict) -> int:
+            return (
+                movie["name"].count("и")
+                if movie["rating_kinopoisk"] and float(movie["rating_kinopoisk"]) >= rating
+                else 0
+            )
 
-        :param list_of_movies: Список фильмов
-        Ключи словаря: name, rating_kinopoisk, rating_imdb, genres, year, access_level, country
-        :param rating: Заданный рейтинг
-        :return: Количество букв 'и' в названиях всех фильмов с рейтингом больше
-        или равным заданному значению
-        """
-        pass
+        counts = map(map_function, list_of_movies)
+
+        return reduce(lambda result, count: result + count, counts)

@@ -1,4 +1,4 @@
-FROM python:3.9-slim as builder
+FROM python:3.10-slim as builder
 
 WORKDIR /app
 
@@ -6,11 +6,12 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl \
-        make
+    curl \
+    make \
+    git
 
 ENV PATH $PATH:/root/.local/bin
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.1.12 \
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.5.0 \
     && poetry config virtualenvs.create false
 
 COPY pyproject.toml poetry.lock ./

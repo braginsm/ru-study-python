@@ -1,31 +1,60 @@
-from flask import Flask
+from flask import Flask, make_response, Response, request
+from http import HTTPStatus
+import json
 
 
 class FlaskExercise:
-    """
-    Вы должны создать API для обработки CRUD запросов.
-    В данной задаче все пользователи хранятся в одном словаре, где ключ - это имя пользователя,
-    а значение - его параметры. {"user1": {"age": 33}, "user2": {"age": 20}}
-    Словарь (dict) хранить в памяти, он должен быть пустым при старте flask.
-
-    POST /user - создание пользователя.
-    В теле запроса приходит JSON в формате {"name": <имя пользователя>}.
-    Ответ должен вернуться так же в JSON в формате {"data": "User <имя пользователя> is created!"}
-    со статусом 201.
-    Если в теле запроса не было ключа "name", то в ответ возвращается JSON
-    {"errors": {"name": "This field is required"}} со статусом 422
-
-    GET /user/<name> - чтение пользователя
-    В ответе должен вернуться JSON {"data": "My name is <name>"}. Статус 200
-
-    PATCH /user/<name> - обновление пользователя
-    В теле запроса приходит JSON в формате {"name": <new_name>}.
-    В ответе должен вернуться JSON {"data": "My name is <new_name>"}. Статус 200
-
-    DELETE /user/<name> - удаление пользователя
-    В ответ должен вернуться статус 204
-    """
-
     @staticmethod
     def configure_routes(app: Flask) -> None:
-        pass
+        users = {}
+        @app.route("/user", methods=['POST'])
+        def create_user() -> Response:
+            data_string = request.get_data()
+            try:
+                user = user_from_json(data_string)
+                name = user['name']
+                users[name] = user
+                return make_response({"data": f"User {name} is created!"}, HTTPStatus.CREATED)
+            except KeyError as e:
+                return make_response({"errors": e.args[0]}, HTTPStatus.UNPROCESSABLE_ENTITY)
+                
+        @app.route("/user/<username>", methods=['GET', 'PATCH', 'DELETE'])
+        def user_actions(username) -> Response:
+            if not username:
+                return make_response('', HTTPStatus.NOT_FOUND)
+            try:
+                user = users[username]
+            except KeyError:
+                return make_response('', HTTPStatus.NOT_FOUND)
+            
+            def get_user() -> Response:
+                user_name = user['name']
+                return make_response({"data": f"My name is {user_name}"}, HTTPStatus.OK)
+            
+            def update_user() -> Response:
+                data_string = request.get_data()
+                try:
+                    user = user_from_json(data_string)
+                    users[username] = user
+                    new_user_name = user['name']
+                    return make_response({"data": f"My name is {new_user_name}"}, HTTPStatus.OK)
+                except KeyError as e:
+                    return make_response({"errors": e.args[0]}, HTTPStatus.UNPROCESSABLE_ENTITY)
+            
+            def delete_user() -> Response:
+                del users[username]
+                return make_response('', HTTPStatus.NO_CONTENT)
+            
+            match request.method:
+                case 'GET':
+                    return get_user()
+                case 'PATCH':
+                    return update_user()            
+                case 'DELETE':
+                    return delete_user()
+                
+        def user_from_json(data_string: str) -> dict:
+            data = json.loads(data_string)
+            if 'name' in data and isinstance(data['name'], str) and len(data['name']) > 0:
+                return data
+            raise KeyError({"name": "This field is required"})
